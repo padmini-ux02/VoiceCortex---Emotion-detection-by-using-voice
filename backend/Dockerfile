@@ -18,6 +18,6 @@ COPY . .
 # Create uploads directory and grant write permissions for Hugging Face (non-root UID 1000)
 RUN mkdir -p uploads/reports && chmod -R 777 /app
 
-EXPOSE 8000
+EXPOSE 7860
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
