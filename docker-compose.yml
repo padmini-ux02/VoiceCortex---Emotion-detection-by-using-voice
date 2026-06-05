@@ -1,0 +1,55 @@
+﻿version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: VoiceCortex_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: VoiceCortex_db
+      POSTGRES_USER: VoiceCortex_user
+      POSTGRES_PASSWORD: VoiceCortex_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U VoiceCortex_user -d VoiceCortex_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: VoiceCortex_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://VoiceCortex_user:VoiceCortex_pass@postgres:5432/VoiceCortex_db
+      SECRET_KEY: production-secret-key-change-this
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: VoiceCortex_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  uploads_data:
